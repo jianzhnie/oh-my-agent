@@ -5,6 +5,11 @@ set -euo pipefail
 INPUT=$(cat)
 FILE_PATH=$(jq -r '.tool_input.file_path // empty' <<<"$INPUT")
 TOOL_NAME=$(jq -r '.tool_name // "Edit"' <<<"$INPUT")
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
+[[ -z "$FILE_PATH" ]] && exit 0
+if [[ "$FILE_PATH" != /* ]]; then
+    FILE_PATH="$PROJECT_DIR/$FILE_PATH"
+fi
 
 # File must exist and be a regular file
 [[ ! -f "$FILE_PATH" ]] && exit 0
@@ -19,20 +24,24 @@ case "${FILE_PATH##*.}" in
     pdf|doc|docx|xls|xlsx|pptx)         exit 0 ;;
 esac
 
-# Log edited file for session summary (deduplicate per session)
-EDIT_LOG="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}/.claude/.session-edits"
+# Log edits; the session summary groups repeated file paths.
+EDIT_LOG="$PROJECT_DIR/.claude/.session-edits"
 echo "${FILE_PATH}|${TOOL_NAME}" >> "$EDIT_LOG"
 
 OUTPUT=""
 
 # Step 1: run pre-commit auto-format on all edited files
-FORMAT_RESULT=$(pre-commit run --files "$FILE_PATH" 2>&1) || true
+if command -v pre-commit >/dev/null 2>&1; then
+    FORMAT_RESULT=$(cd "$PROJECT_DIR" && pre-commit run --files "$FILE_PATH" 2>&1) || true
+else
+    FORMAT_RESULT="Skipped formatting: pre-commit is not installed."
+fi
 if [[ -n "$FORMAT_RESULT" ]]; then
     OUTPUT+="${FORMAT_RESULT}"
 fi
 
 # Step 2: run shellcheck on .sh files
-if [[ "$FILE_PATH" == *.sh ]]; then
+if [[ "$FILE_PATH" == *.sh ]] && command -v shellcheck >/dev/null 2>&1; then
     SHELLCHECK_RESULT=$(shellcheck "$FILE_PATH" 2>&1) || true
     if [[ -n "$SHELLCHECK_RESULT" ]]; then
         [[ -n "$OUTPUT" ]] && OUTPUT+=$'\n'

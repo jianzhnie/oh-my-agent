@@ -15,7 +15,8 @@ deny() {
 if [[ "$TOOL_NAME" == "Bash" ]]; then
     COMMAND=$(jq -r '.tool_input.command' <<<"$INPUT")
 
-    # Block rm -rf on system-critical or home directories (single grep)
+    # Match the literal $HOME token in commands rather than expanding this hook's HOME.
+    # shellcheck disable=SC2016
     if echo "$COMMAND" | grep -qE 'rm\s+-[a-zA-Z]*[rf][a-zA-Z]*\s+(/($|\s|home|etc|usr|var|opt)|\$HOME|~)'; then
         deny "Blocked: rm -rf on system/HOME directory is prohibited by safety policy"
     fi

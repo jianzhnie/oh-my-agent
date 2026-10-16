@@ -6,27 +6,36 @@
 
 ```text
 agent/
-├── agents/          # 9 个角色定义，保持原文件名
-├── commands/        # 1 个命令入口
-├── rules/           # 3 份编码与 Git 规则
-├── output-styles/   # 3 种输出风格
-├── hooks/           # 10 个生命周期脚本，保持 settings 引用
-├── skills/          # 19 个技能目录，每个包含 SKILL.md
-│   └── <skill-name>/ # 按技能名直接查找，附属资源随技能保存
-├── settings.json    # Claude Code 设置
-├── .mcp.json        # MCP 服务器配置
-├── statusline.sh    # 状态栏入口
-└── README.md        # 分类索引与维护约定
+├── agents/                 # 9 个角色定义
+├── rules/                  # 3 份规则
+├── output-styles/          # 3 种输出风格
+├── skills/                 # 17 个技能，按技能名直接定位
+│   └── <skill-name>/       # SKILL.md 与附属资源
+├── hooks/
+│   ├── session/            # context.sh、summarize.sh
+│   ├── security/           # guard-tool.sh
+│   ├── formatting/         # format-file.sh
+│   ├── logging/            # record-event.sh
+│   ├── notifications/      # notify.sh
+│   ├── environment/        # reload.sh
+│   └── shared/             # notifications.sh，仅供入口脚本引用
+├── scripts/                # status-line.sh 等非 Hook 运行脚本
+├── tests/                  # 隔离运行时回归测试
+├── settings.json           # Claude Code 设置模板
+├── .mcp.json               # MCP 设置模板
+└── README.md               # 配置入口与功能索引
 ```
 
-技能按本页功能分类查找，按 `name` 定位磁盘目录。通用分析与提交前审查归入 Check；GitHub 分类仅收录平台相关操作；翻译归入 Documentation。保留 `agents/`、`commands/`、`rules/`、`output-styles/` 和 `hooks/` 的入口路径，避免改变命令名称和现有 Hook 引用。
+技能按本页功能分类查找，按 `name` 定位磁盘目录。通用分析与提交前审查归入 Check；GitHub 分类仅收录平台相关操作；翻译归入 Documentation。保留角色、规则、输出风格和技能的名称；Hooks 按职责分组，settings 中使用显式路径注册。
 
 这是配置源目录；部署目标仍使用 `.claude/` 约定。MCP 项目配置需按客户端约定放置到项目根目录；本次不自动安装或覆盖现有配置。
+
+命名约定：目录和 Shell 文件采用小写 kebab-case，技能入口固定为 `SKILL.md`，Python 测试采用 `test_*.py`。Hook 脚本按职责命名；事件绑定由 settings 维护。
 
 ## 来源与维护约定
 
 - Local Markdown 的依据为现有文件署名、仓库 Apache-2.0 许可及已有索引；Hooks、状态栏和设置的本地维护依据为 Git 历史（如 `80faff2`、`a241329`、`1cf2354`、`65be515`、`f52ed88`），未独立署名的文件不推断具体作者。
-- External 的依据为文件中的外部署名及已有索引。Hermes Agent 仅能确认来源名称，仓库 URL 与引入 tag/commit 均待确认；blogwatcher 的 homepage 指向工具仓库，不能据此认定技能文件的上游。文件自身 version 不代表引入版本。
+- External 的依据为文件中的外部署名及已有索引。Hermes Agent 仅能确认来源名称，仓库 URL 与引入 tag/commit 均待确认。文件自身 version 不代表引入版本。
 - 技能采用 `skills/<skill-name>/SKILL.md`，每个技能与附属资源整体迁移；仅修改仓库分类标签和迁移相关路径，保留运行时字段、外部署名与许可。不向脚本、JSON、模板或参考文档添加 Frontmatter。
 - 分类标题使用技能首个标签：Check、GitHub、Dev、Research、Documentation。分类通过标签和本索引表达，不增加技能发现所需的目录层级。
 
@@ -43,14 +52,6 @@ agent/
 | refactor | [agents/refactor.md](agents/refactor.md) | 1.0.0 | Robin | Apache-2.0 | Local | — | Safe code refactoring specialist. |
 | shell-expert | [agents/shell-expert.md](agents/shell-expert.md) | 1.0.0 | Robin | Apache-2.0 | Local | — | Shell script specialist. |
 | test-writer | [agents/test-writer.md](agents/test-writer.md) | 1.0.0 | Robin | Apache-2.0 | Local | — | Writes unit and integration tests. |
-
-## Commands
-
-提交前检查统一使用 `/check`（见 Skills / Check），原 `/precheck` 入口已合并。
-
-| Name | Path | Version | Author | License | Type | External Info | Description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| status | [commands/status.md](commands/status.md) | 1.0.0 | Robin | Apache-2.0 | Local | — | Show current project status at a glance. |
 
 ## Output Styles
 
@@ -114,8 +115,6 @@ GitHub 认证、Issue、PR 与仓库操作。
 
 | Name | Path | Version | Author | License | Type | External Info | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| arxiv | [skills/arxiv/SKILL.md](skills/arxiv/SKILL.md) | 1.0.0 | Hermes Agent | MIT | External | 来源：Hermes Agent（现有署名/索引）；仓库 URL、引入版本待确认 | Search arXiv papers by keyword, author, category, or ID. |
-| blogwatcher | [skills/blogwatcher/SKILL.md](skills/blogwatcher/SKILL.md) | 2.0.0 | JulienTant (fork of Hyaxia/blogwatcher) | MIT | External | 工具 homepage：[JulienTant/blogwatcher-cli](https://github.com/JulienTant/blogwatcher-cli)；技能上游仓库及引入版本待确认 | Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool. |
 | llm-wiki | [skills/llm-wiki/SKILL.md](skills/llm-wiki/SKILL.md) | 2.1.0 | Hermes Agent | MIT | External | 来源：Hermes Agent（现有署名/索引）；仓库 URL、引入版本待确认 | Karpathy's LLM Wiki: build/query interlinked markdown KB. |
 
 ### Documentation
@@ -130,16 +129,13 @@ GitHub 认证、Issue、PR 与仓库操作。
 
 | Name | Path | Version | Author | License | Type | External Info | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| compact-restore | [hooks/compact-restore.sh](hooks/compact-restore.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | SessionStart compact hook: re-inject critical context after compaction. |
-| config-audit | [hooks/config-audit.sh](hooks/config-audit.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | ConfigChange hook: audit configuration modifications. |
-| log-events | [hooks/log-events.sh](hooks/log-events.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | 记录 Bash 命令与子代理启动事件，保留原日志格式。 |
-| notify | [hooks/notify.sh](hooks/notify.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | Notification hook: WeChat + desktop + voice when Claude needs attention. |
-| post-tool-use | [hooks/post-tool-use.sh](hooks/post-tool-use.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | PostToolUse hook: auto-format edited files and shellcheck .sh files. |
-| pre-tool-use | [hooks/pre-tool-use.sh](hooks/pre-tool-use.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | PreToolUse hook: block dangerous commands and protect sensitive files. |
-| reload-env | [hooks/reload-env.sh](hooks/reload-env.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | Reload environment variables when directory or .envrc/.env changes. |
-| session-init | [hooks/session-init.sh](hooks/session-init.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | SessionStart hook: initialize session with project context. |
-| session-summary | [hooks/session-summary.sh](hooks/session-summary.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | SessionEnd hook: send session summary to WeChat via Server酱. |
-| stop-failure | [hooks/stop-failure.sh](hooks/stop-failure.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | StopFailure hook: log API errors during session. |
+| record-event | [hooks/logging/record-event.sh](hooks/logging/record-event.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | 分流命令、代理、配置审计及异常事件，保留各类日志格式。 |
+| notify | [hooks/notifications/notify.sh](hooks/notifications/notify.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | Notification hook: WeChat + desktop + voice when Claude needs attention. |
+| format-file | [hooks/formatting/format-file.sh](hooks/formatting/format-file.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | PostToolUse hook: auto-format edited files and shellcheck .sh files. |
+| guard-tool | [hooks/security/guard-tool.sh](hooks/security/guard-tool.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | PreToolUse hook: block dangerous commands and protect sensitive files. |
+| reload | [hooks/environment/reload.sh](hooks/environment/reload.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | Reload environment variables when directory or .envrc/.env changes. |
+| context | [hooks/session/context.sh](hooks/session/context.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | 初始化会话或恢复 compact 上下文，仅 startup 重置会话记录。 |
+| summarize | [hooks/session/summarize.sh](hooks/session/summarize.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | SessionEnd hook: send session summary to WeChat via Server酱. |
 
 ## Settings & MCP & Status Line
 
@@ -147,7 +143,7 @@ GitHub 认证、Issue、PR 与仓库操作。
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | settings.json | [settings.json](settings.json) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | Claude Code 权限、Hooks、插件与状态栏配置。 |
 | .mcp.json | [.mcp.json](.mcp.json) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | MCP 服务器启动配置。 |
-| statusline.sh | [statusline.sh](statusline.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | 显示上下文用量、Git 状态与模型信息。 |
+| scripts/status-line.sh | [scripts/status-line.sh](scripts/status-line.sh) | — | 待确认 | Apache-2.0（仓库许可） | Local | — | 显示上下文用量、Git 状态与模型信息。 |
 
 ## Frontmatter Standard
 
@@ -169,7 +165,7 @@ metadata:
 
 ## 已知差异与待确认项
 
-- 根目录 README 和 CLAUDE.md 仍描述 `.claude/`，Git 提交 `f4e748f` 已将配置迁至 `agent/`。本次只更新本目录索引，未修改部署行为。
+- 根目录 README 仍描述 `.claude/`；CLAUDE.md 已区分 `agent/` 配置源与 `.claude/` 运行时部署目录。Git 提交 `f4e748f` 记录了配置源迁移。
 - settings 和脚本仍含 `.claude/` 运行时路径；本目录是配置集合，不据此自动修改这些路径。技能入口已改为单层目录；尚未进行实际客户端加载验证。
 - 已删除旧索引中的 MLOps、vLLM Skills 条目：当前目录无对应配置，不重新创建。
 - `python-debugpy` 原始平台为 `[linux, macos]`，保留外部声明，不扩展为 Windows。
@@ -179,14 +175,56 @@ metadata:
 
 ### 未收录的上游关联技能
 
-以下 8 处引用来自外部配置的 `metadata.hermes.related_skills`，属于上游技能生态关联；保留原始值，不声称仓库内可用。若需使用，须另行核实来源并引入。
+以下 7 处引用来自外部配置的 `metadata.hermes.related_skills`，属于上游技能生态关联；保留原始值，不声称仓库内可用。若需使用，须另行核实来源并引入。
 
 | 当前技能 | 本仓库未收录的关联 |
 | --- | --- |
 | requesting-code-review | subagent-driven-development |
-| arxiv | ocr-and-documents |
 | llm-wiki | obsidian |
 | plan | subagent-driven-development |
 | python-debugpy | node-inspect-debugger、debugging-hermes-tui-commands |
 | systematic-debugging | subagent-driven-development |
 | test-driven-development | subagent-driven-development |
+
+## 运行与维护
+
+- 基础依赖：Bash、Git、jq。格式化需要 pre-commit，Shell 静态分析需要 shellcheck；macOS 桌面和语音通知仅在 osascript、say 存在时启用。
+- `hooks/shared/notifications.sh` 是共享函数文件，不注册为 Hook；部署时须随 hooks 目录一起复制。通知密钥从部署项目 `.claude/.env` 的 `SCT_SENDKEY=...` 读取，不执行该文件内容。
+- Server酱请求使用表单编码，连接超时 2 秒、总超时 4 秒；无密钥时跳过网络通知。即时通知失败不阻断桌面通知，会话摘要发送失败不阻断退出。
+- PostToolUse 将相对文件路径解析到 `CLAUDE_PROJECT_DIR`，从项目根目录运行 pre-commit；缺少 pre-commit 时返回跳过说明。
+- `tests/` 和 `hooks/shared/` 属于维护资源，不计入 42 个配置入口。测试使用临时 Git 仓库并替换 curl、osascript、say，不发送真实通知。
+
+```bash
+python3 -m unittest discover -s agent/tests -v
+find agent/hooks agent/scripts -name '*.sh' -exec shellcheck {} +
+```
+
+尚未进行实际客户端的事件触发验证；配置中的权限、插件和事件名称保持原样。
+
+## 路径迁移与部署
+
+| 原路径 | 新路径 |
+| --- | --- |
+| `hooks/session-init.sh` | `hooks/session/context.sh` |
+| `hooks/compact-restore.sh` | `hooks/session/context.sh` |
+| `hooks/session-summary.sh` | `hooks/session/summarize.sh` |
+| `hooks/pre-tool-use.sh` | `hooks/security/guard-tool.sh` |
+| `hooks/post-tool-use.sh` | `hooks/formatting/format-file.sh` |
+| `hooks/log-events.sh` | `hooks/logging/record-event.sh` |
+| `hooks/config-audit.sh` | `hooks/logging/record-event.sh` |
+| `hooks/stop-failure.sh` | `hooks/logging/record-event.sh` |
+| `hooks/notify.sh` | `hooks/notifications/notify.sh` |
+| `hooks/reload-env.sh` | `hooks/environment/reload.sh` |
+| `hooks/helpers/notifications.sh` | `hooks/shared/notifications.sh` |
+| `statusline.sh` | `scripts/status-line.sh` |
+
+- 更新部署时，将 Hooks、shared 公共函数、scripts 和 settings 一起复制到项目 `.claude/`，避免新旧配置混用。
+- 状态栏入口现为 `.claude/scripts/status-line.sh`。Hook 命令使用加引号的显式路径，支持项目路径含空格。
+- 更新 settings 后，再按迁移表清理已部署的旧文件；本次没有操作已安装配置。
+- `.mcp.json` 按客户端约定部署到项目根目录。测试属于维护资源，不注册为运行入口。
+
+### 本轮合并
+
+- `session/start.sh` 与 `session/restore-context.sh` 合并为 `session/context.sh`，使用 SessionStart 输入的 `source` 区分 startup 与 compact；compact 不重置时间、命令基线或编辑记录。
+- `logging/log-events.sh`、`logging/audit-config.sh`、`logging/log-failure.sh` 合并为 `logging/record-event.sh`，按 `hook_event_name` 分流，继续分别写入 command-log.txt、config-audit.log、stop-failure.log。
+- 原 `/status` 命令已移除，清理了失效索引与空目录。提交前检查统一使用 `/check`。

@@ -2,14 +2,15 @@
 # SessionEnd hook: send session summary to WeChat via Server酱
 set -euo pipefail
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
+HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=agent/hooks/shared/notifications.sh
+source "$HOOK_DIR/../shared/notifications.sh"
+
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 SESSION_FILE="${PROJECT_DIR}/.claude/.session-start"
 
 # Load SCT_SENDKEY
-SCT_SENDKEY=""
-if [[ -f "$PROJECT_DIR/.claude/.env" ]]; then
-    SCT_SENDKEY=$(grep '^SCT_SENDKEY=' "$PROJECT_DIR/.claude/.env" | cut -d= -f2-)
-fi
+load_notification_key "$PROJECT_DIR/.claude/.env"
 [[ -z "${SCT_SENDKEY:-}" ]] && exit 0
 
 # --- Collect data ---
@@ -46,19 +47,16 @@ BRANCH=$(git branch --show-current 2>/dev/null || echo "?")
 
 # Use git status --porcelain=v2 for richer parseable output in one call
 STATUS_OUT=$(git status --porcelain=2 --branch 2>/dev/null || true)
-# Count all file entries (lines starting with 1, 2, or ?), excluding headers (#)
-UNCOMMITTED=$(grep -cE '^[12?]' <<< "$STATUS_OUT" 2>/dev/null || echo 0)
+# Count ordinary, renamed, conflicted and untracked entries, excluding headers.
+UNCOMMITTED=$(grep -cE '^[12u?]' <<< "$STATUS_OUT" || true)
 
-# Diff stats: single awk pass computes adds + dels + file list
+# Sum text line counts; binary files remain in the file list.
 DIFF_STATS=$(git diff --numstat 2>/dev/null || true)
 DIFF_FILES=""
-TOTAL_ADDS=0
-TOTAL_DELS=0
+collect_diff_totals "$DIFF_STATS"
 while IFS=$'\t' read -r adds dels file; do
     [[ -z "$file" ]] && continue
     DIFF_FILES+="  \`${file}\` +${adds} −${dels}\n"
-    TOTAL_ADDS=$((TOTAL_ADDS + adds))
-    TOTAL_DELS=$((TOTAL_DELS + dels))
 done <<< "$DIFF_STATS"
 FILE_COUNT=$(wc -l <<< "$DIFF_STATS" | tr -d ' ')
 [[ "$DIFF_STATS" == "" ]] && FILE_COUNT=0
@@ -73,10 +71,7 @@ STAGED_FILES=$(wc -l <<< "$STAGED_STATS" | tr -d ' ')
 # Commits this session
 COMMITS=""
 if [[ -n "${START_TIME:-}" ]]; then
-    SINCE_TS=$(date -r "$START_TIME" -u +%Y-%m-%dT%H:%M:%S 2>/dev/null || echo "")
-    if [[ -n "$SINCE_TS" ]]; then
-        COMMITS=$(git log --oneline --since="$SINCE_TS" 2>/dev/null | head -5 || echo "")
-    fi
+    COMMITS=$(git log --max-count=5 --oneline --since="@${START_TIME}" 2>/dev/null || true)
 fi
 
 # Edited files this session
@@ -134,10 +129,7 @@ if [[ ${#DESP} -gt $MAX_LEN ]]; then
 fi
 
 # --- Send ---
-curl -s -X POST "https://sctapi.ftqq.com/${SCT_SENDKEY}.send" \
-    -d "title=${TITLE}" \
-    -d "desp=${DESP}" \
-    -o /dev/null
+send_notification "$TITLE" "$DESP" || true
 
 # Cleanup
 rm -f "${PROJECT_DIR}"/.claude/tmp-*.txt 2>/dev/null || true

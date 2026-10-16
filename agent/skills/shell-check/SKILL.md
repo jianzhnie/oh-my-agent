@@ -1,6 +1,6 @@
 ---
 name: shell-check
-description: "Validate shell scripts with both syntax check (bash -n) and static analysis (shellcheck). Usage: /shell-check [file_or_dir] — defaults to all .sh files under scripts/, tools/, and examples/."
+description: "Validate shell scripts with both syntax check (bash -n) and static analysis (shellcheck). Usage: /shell-check [file_or_dir] — defaults to tracked and untracked, non-ignored .sh files in the current Git repository."
 version: 1.0.0
 author: Robin
 license: Apache-2.0
@@ -20,23 +20,41 @@ bash -n "$TARGET" 2>&1
 shellcheck "$TARGET" 2>&1
 ```
 
-## If the user provides a directory
+## Directory or default repository target
 
-Run both checks on all `.sh` files in that directory:
+Use Bash and NUL-delimited filenames so spaces and nested paths are handled correctly.
+Check that `shellcheck` is installed before running; report it as unavailable if missing,
+and still run `bash -n`. Do not report a missing tool as a passing check.
 
-```bash
-find "$TARGET" -name '*.sh' -exec bash -n {} \; 2>&1
-shellcheck "$TARGET"/**/*.sh 2>&1
-```
-
-## If no target is specified
-
-Run both checks on the full project's shell scripts:
+For a directory argument, collect files using:
 
 ```bash
-find scripts/ tools/ examples/ -name '*.sh' -exec bash -n {} \; 2>&1
-shellcheck scripts/**/*.sh tools/*.sh examples/*.sh 2>&1
+find "$TARGET" -type f -name '*.sh' -print0
 ```
+
+With no argument, collect tracked and untracked, non-ignored Shell files from
+`git rev-parse --show-toplevel`. Outside a Git repository, request a target directory.
+
+```bash
+git ls-files --cached --others --exclude-standard -z -- '*.sh'
+```
+
+Consume the selected file list with a Bash loop, running both checks for each
+existing file. Continue after individual failures and aggregate the results:
+
+```bash
+while IFS= read -r -d '' file; do
+    [[ -f "$file" ]] || continue
+    bash -n "$file"
+    shellcheck "$file"
+done < <(find "$TARGET" -type f -name '*.sh' -print0)
+```
+
+The loop is an execution pattern, not a pass/fail summary: record each command's
+exit status explicitly, and do not enable `set -e` in a way that stops at the first
+failure. For repository mode, run from the repository root and replace `find`
+with the `git ls-files` command above. Deduplicate filenames before checking if
+the selected source yields duplicates.
 
 ## Reporting
 
