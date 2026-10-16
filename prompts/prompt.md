@@ -1,69 +1,122 @@
-# Role: Claude Configuration Architect
+# 角色：配置规范化维护者
 
-## Context
-你负责整理并标准化 `~/.claude` 目录下的所有配置文件（包含 agents, skills, commands, rules, hooks, output-styles 等）。你需要确保所有配置符合 Claude 的规范，并提供完善的文档说明。
+你负责整理 Oh My Agent 仓库中的配置，在保留配置行为、运行时兼容性和外部来源信息的前提下，统一本地配置元数据、整理技能分类，并维护可核验的配置索引。请实际完成修改与验证，不要只输出建议。
 
-## Requirements
+## 一、目标与范围
 
-### 1. 配置标准化 (YAML Frontmatter)
+- 默认目标为当前仓库根目录下的 `agent/`，索引为 `agent/README.md`；用户明确指定其他目录时，以用户指定为准。不要将 `agent/` 自动解释为 `~/agent` 或 `.claude/`。
+- 开始前阅读适用的仓库说明，检查工作区已有改动；保留用户改动，只修改与任务直接相关的内容。
+- 盘点 `agents/`、`skills/`、`commands/`、`rules/`、`hooks/`、`output-styles/` 及其他实际存在的配置，不假定所有子目录均存在。
+- 以实际文件为准。文档与目录不一致时记录差异，不据此创建无用途的目录或配置。
+- 仅整理元数据、分类和索引；除修复本次整理引起的引用问题外，不改写配置正文、命令行为或权限设置，不提交或推送 Git 变更。
 
-所有配置文件（如 `.md` 文件）必须包含标准化的 YAML Frontmatter。对于不符合规范的文件，请进行重构或添加缺失字段。
+## 二、先识别来源，再应用规则
 
-- **Author**: 对于现有的本地配置文件，统一设置为 `"Robin"`。
-- **Version**: 统一设置为 `"1.0.0"`。
-- **License**: 保持本仓库的 License (`Apache-2.0`)。
-- **Platforms**: 保持本仓库的 Platforms 配置 `[linux, macos, windows]`。
-- **Metadata**:
-  - 包含 `tags`, `related_skills` 等元数据。
-- **外部引入配置**: 保持其原始配置，严禁修改其原始 Author, Version 和 License。
+根据文件声明、LICENSE、已有索引、Git 历史或明确的上游地址判断来源，不能仅凭作者字段缺失就认定为本地原创。
 
-### 2. 标准 YAML 示例
+| 类型 | 判定依据 | 处理规则 |
+| --- | --- | --- |
+| Local | 有证据表明由本仓库维护者原创 | 按本地规范整理元数据 |
+| External | 有明确上游来源，包括基于外部内容改编的配置 | 保留原始署名、版本、许可及归属声明，仅做必要的组织性调整 |
+| Unknown | 证据不足或相互矛盾 | 保留现有元数据，在索引中标注待确认，说明缺少哪些证据 |
+
+规则冲突时，优先保留外部归属信息及运行时兼容性。本地统一规则不得覆盖外部配置；无法核实的作者、版本、许可、来源地址和平台支持不得编造。
+
+## 三、Frontmatter 规范
+
+### 适用范围
+
+- 为作为配置入口的 Markdown 文件整理 YAML Frontmatter，例如 `agents/*.md`、`commands/*.md`、`rules/*.md`、`output-styles/*.md` 和技能入口 `SKILL.md`。
+- README、参考文档、示例、模板及技能附属资源不因扩展名为 `.md` 就自动添加 Frontmatter。
+- JSON、Shell、Python 等文件保持原生格式，不插入 YAML Frontmatter；按需将它们纳入索引。
+- 修改前确认对应配置类型和加载器支持相关字段。若不支持，将补充信息放入索引并说明原因，不强行写入配置文件。
+
+### 本地配置
+
+在格式兼容的前提下，本地 Markdown 配置入口使用以下字段：
+
 ```yaml
 ---
-name: github-code-review
-description: "Review PRs: diffs, inline comments via gh or REST."
-version: 1.1.0
-author: Hermes Agent
-license: MIT
+name: shell-check
+description: "检查 Shell 脚本的语法和静态分析问题。"
+version: "1.0.0"
+author: Robin
+license: Apache-2.0
 platforms: [linux, macos, windows]
 metadata:
-  tags: [GitHub, Code-Review, Pull-Requests, Git, Quality]
-  related_skills: [github-auth, github-pr-workflow]
+  tags: [Check, Shell, Lint]
+  related_skills: []
 ---
 ```
 
-### 3. 技能分类与标签化 (Categorization)
-对 `skills/` 目录下的配置文件进行智能分类，保存到不同的文件中， 并确保分类逻辑在元数据中同步：
-- **分类标准**: 基于功能属性进行归类，预设分类包括但不限于：
-  - `Check`: 语法检查、Linter、代码校验。
-  - `GitHub`: PR 管理、Issue 处理、Repo 操作。
-  - `Dev`: 软件开发、重构、测试生成。
-  - `Research`: 知识搜索、技术调研、文档分析。
-  - `MLOps`: 模型训练、部署、数据流管理。
-- **元数据同步**: 选定的分类必须作为第一个 tag 出现在 YAML Frontmatter 的 `metadata.tags` 中。
-- **目录结构**: 分类应直接体现在 `.claude/README.md` 的章节划分中，每个分类为一个二级或三级标题。
+- `name`：保留已有有效标识；缺失时按文件名或技能目录名补齐，避免同类配置名称重复。
+- `description`：简洁描述实际功能，不添加未经实现的能力。
+- `author`、`version`、`license`：分别统一为 `Robin`、`"1.0.0"`、`Apache-2.0`。
+- `platforms`：仓库默认值为 `[linux, macos, windows]`；实现有明确平台限制时，按实际支持填写并报告差异。
+- `metadata.tags`：字符串列表；技能首项为主分类，其余为功能标签，去除重复项。
+- `metadata.related_skills`：仅列出目录内真实存在且有关联的技能 `name`；无关联时用 `[]`。
+- 合并已有 Frontmatter，保留原有有效字段、运行时专用字段及未知字段，不用示例整体覆盖原内容。
 
-### 4. 文档自动化 (README.md)
-在 `.claude/README.md` 中维护一份结构化的配置索引，包含以下信息：
-- **Name**: 配置文件名称。
-- **Path**: 文件相对路径。
-- **Version/Author**: 版本及作者信息。
-- **Type**: 标注 "Local" (本地原创) 或 "External" (外部引入)。
-- **External Info**: 若为外部引入，需说明 GitHub 仓库地址及引入版本。
-- **Description**: 核心功能描述。
+### 外部与来源不明配置
 
-## Workflow
-1. **Inventory**: 遍历 `~/.claude` 目录，识别所有需要标准化的配置文件。
-2. **Standardization & Categorization**:
-   - 为缺失 Frontmatter 的文件添加标准头。
-   - 修正本地配置文件的 Author (`Robin`)、Version (`1.0.0`)、License (`Apache-2.0`)。
-   - **智能分类**: 根据技能用途将其归入 `Check`, `GitHub`, `Dev`, `Research`, `MLOps` 或自定义分类，并将分类标签置于 `metadata.tags` 首位。
-   - 确保 `platforms` 为 `[linux, macos, windows]`。
-3. **Documentation**: 更新 `.claude/README.md`，确保索引与实际文件同步。
-4. **Verification**: 检查 YAML 语法是否正确，且文件路径引用准确。
+- 外部配置保留原有 `author`、`version`、`license`、`platforms`、正文及归属声明，不强制补齐本地字段。
+- 为外部技能调整分类时，仅将主分类移至 `metadata.tags` 首位，保留其余原始标签与元数据。标签结构不兼容或上游明确要求保持文件原样时，只在索引中分类并记录例外。
+- 外部配置缺失的来源信息在索引中标注“待确认”，不以本地默认值替代。
+- Unknown 配置暂不执行依赖来源判定的元数据覆盖，待证据明确后再处理。
 
-## Definition of Done
-- [ ] 所有配置文件均拥有符合规范的 YAML Frontmatter。
-- [ ] 所有技能均已按功能模块分类，且 `metadata.tags` 首位为分类标签。
-- [ ] 外部引入的配置保持了原始元数据，未被错误修改。
-- [ ] `.claude/README.md` 按分类组织，包含完整的配置列表，表格化展示，清晰易读。
+## 四、技能分类与目录组织
+
+以每个技能目录及其 `SKILL.md` 为整理单元，不拆分技能正文，也不把多个技能合并到同一文件。
+
+1. 优先复用仓库中语义清晰的现有分类，避免仅因名称偏好进行迁移。无合适现有分类时，参考下表，必要时新增分类并解释依据。
+
+   | 分类 | 用途 |
+   | --- | --- |
+   | Check | 语法检查、Lint、代码校验 |
+   | GitHub | PR、Issue、仓库管理 |
+   | Dev | 开发、重构、调试、测试 |
+   | Research | 信息搜索、技术调研、文档分析 |
+
+2. 每个技能选择一个主分类，其他用途作为附加标签。
+3. 在 README 的 Skills 章节中，按主分类建立三级标题，标题名称与技能首个分类标签一致；例外须明确标注。
+4. 默认保持现有路径。确需迁移时，先验证加载器支持目标目录层级，再整体移动技能及附属资源，同步更新仓库内引用，并检查相对链接和脚本路径。
+
+## 五、配置索引
+
+维护 `agent/README.md`，按配置类型组织章节，Skills 章节内按分类组织表格。保留有效说明，清理重复或失效条目。
+
+每个逻辑配置入口占一行，附属资源不重复计为独立技能。统一提供以下列：
+
+| 列 | 内容要求 |
+| --- | --- |
+| Name | 配置的有效名称 |
+| Path | 相对 `agent/README.md` 的可点击路径 |
+| Version | 文件声明的版本；不适用用 `—`，应有但无法核实用“待确认” |
+| Author | 实际作者或“待确认” |
+| License | 实际许可或“待确认” |
+| Type | `Local`、`External` 或 `Unknown` |
+| External Info | 上游仓库 URL 及引入版本、tag 或 commit；无法核实的部分标注“待确认”，本地配置用 `—` |
+| Description | 一句话描述核心功能 |
+
+文件自身的 `version` 不等于上游引入版本，不得相互替代。没有版本概念的脚本或设置文件无需虚构版本。
+
+## 六、执行流程
+
+1. **盘点**：检查工作区，枚举配置入口、附属资源、来源证据、现有分类和引用关系。
+2. **确定变更**：简述发现的问题与处理方式；可确定的部分直接执行，来源不明的部分保留并记录。
+3. **规范化**：按来源与文件类型合并元数据，避免改变配置功能。
+4. **分类与索引**：整理分类标签，更新 README；如需迁移目录，同步修复引用。
+5. **验证**：使用可用解析工具检查修改过的 YAML Frontmatter，确认无重复键且字段类型正确；核对同类配置名称唯一性、关联技能、分类标签、索引覆盖率和本地链接。运行仓库已有的适用检查，并复核 diff，确认外部署名和许可未被覆盖、无无关改动。
+6. **汇报**：用中文说明修改文件、各来源类型数量、分类或路径调整、实际执行的检查及结果，并列出待确认项。未执行或失败的检查必须如实说明，不宣称全部通过。
+
+遇到不确定项时，继续完成其他可确定的工作；仅在问题确实阻碍后续操作时向用户澄清，不为补齐表格而猜测事实。
+
+## 七、完成标准
+
+- [ ] 配置入口已完整盘点，附属文档及非 Markdown 文件未被错误添加 Frontmatter。
+- [ ] 可确认的本地配置符合规范，已有有效字段和配置行为得到保留。
+- [ ] 外部配置的原始署名、版本、许可和归属声明得到保留。
+- [ ] 技能分类与首个标签、README 分类标题一致，例外有明确说明。
+- [ ] 如有目录迁移，技能附属资源完整、加载方式兼容、引用已更新。
+- [ ] README 索引覆盖实际配置入口，路径有效，来源信息可核验。
+- [ ] 已执行适用验证，报告真实结果；待确认项和未完成检查已明确列出。

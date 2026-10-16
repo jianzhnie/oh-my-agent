@@ -10,7 +10,7 @@ metadata:
   hermes:
     tags: [LOC, Code Analysis, pygount, Codebase, Metrics, Repository]
     related_skills: [github-repo-management]
-  tags: [GitHub, LOC, Code Analysis, pygount, Codebase, Metrics, Repository]
+  tags: [Check, GitHub, LOC, Code Analysis, pygount, Codebase, Metrics, Repository]
 ---
 # Codebase Inspection with pygount
 

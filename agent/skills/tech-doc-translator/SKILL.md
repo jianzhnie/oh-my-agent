@@ -6,7 +6,7 @@ author: Robin
 license: Apache-2.0
 platforms: [linux, macos, windows]
 metadata:
-  tags: [Research, Skill, Translation, Chinese, Documentation]
+  tags: [Documentation, Research, Skill, Translation, Chinese]
   related_skills: []
 ---
 # AI 技术文档翻译助手

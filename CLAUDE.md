@@ -51,13 +51,13 @@ pytest
 | SessionStart/compact | `compact-restore.sh` | compact 后恢复关键上下文 |
 | PreToolUse | `pre-tool-use.sh` | 拦截危险命令和敏感文件写入 |
 | PostToolUse | `post-tool-use.sh` | 自动格式化 + shellcheck |
-| PostToolUse/Bash | `log-commands.sh` | 记录所有 Bash 命令 |
+| PostToolUse/Bash | `log-events.sh` | 记录所有 Bash 命令 |
 | Notification | `notify.sh` | 桌面/语音通知 |
 | SessionEnd | `session-summary.sh` | 会话摘要推送 |
 | StopFailure | `stop-failure.sh` | 记录异常停止 |
 | ConfigChange | `config-audit.sh` | 审计配置变更 |
 | CwdChanged/FileChanged | `reload-env.sh` | 环境变量重载 |
-| SubagentStart | `log-agent.sh` | 记录 Agent 调用 |
+| SubagentStart | `log-events.sh` | 记录 Agent 调用 |
 
 ## 代码规范
 
