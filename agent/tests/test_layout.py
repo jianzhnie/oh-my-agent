@@ -29,7 +29,7 @@ class LayoutTests(unittest.TestCase):
         expected = {
             str(path.relative_to(AGENT))
             for path in (AGENT / "hooks").rglob("*.sh")
-            if "shared" not in path.parts
+            if path.name != "common.sh"
         } | {"scripts/status-line.sh"}
         self.assertEqual(registered, expected)
 
@@ -55,7 +55,7 @@ class LayoutTests(unittest.TestCase):
         expected.update(
             str(p.relative_to(AGENT))
             for p in (AGENT / "hooks").rglob("*.sh")
-            if "shared" not in p.parts
+            if p.name != "common.sh"
         )
         self.assertEqual(set(links), expected)
 

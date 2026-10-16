@@ -26,20 +26,19 @@
 | `architect` | 系统架构设计、API 设计、技术选型 |
 | `code-reviewer` | 代码审查（正确性、安全性、性能） |
 | `debugger` | 系统性调试与根因分析 |
-| `doc-writer` | 文档和 docstring 编写 |
+| `documentation-writer` | 文档和 docstring 编写 |
 | `library-integration` | 第三方库/SDK 集成 |
-| `perf-analyzer` | 性能分析（吞吐量、内存、延迟） |
+| `performance-analyzer` | 性能分析（吞吐量、内存、延迟） |
 | `refactor` | 安全重构，不改变行为 |
 | `shell-expert` | Shell 脚本编写与审查 |
 | `test-writer` | 单元测试和集成测试编写 |
 
-### Skills（4 个）
+### Skills（3 个）
 
 | Skill | 用途 |
 |-------|------|
 | `check` | 运行完整 pre-commit 检查 |
 | `shell-check` | Shell 脚本语法和静态分析 |
-| `karpathy-guidelines` | 减少 LLM 常见编码错误的指导 |
 | `tech-doc-translator` | 英文技术文档翻译为中文 |
 
 ### Hooks

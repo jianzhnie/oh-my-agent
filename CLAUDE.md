@@ -45,7 +45,7 @@ pytest
 
 ## Agent 定义
 
-9 个自定义 Agent 位于 `agent/agents/`：`architect`、`code-reviewer`、`debugger`、`doc-writer`、`library-integration`、`perf-analyzer`、`refactor`、`shell-expert`、`test-writer`。
+9 个自定义 Agent 位于 `agent/agents/`：`architect`、`code-reviewer`、`debugger`、`documentation-writer`、`library-integration`、`performance-analyzer`、`refactor`、`shell-expert`、`test-writer`。
 
 ## Hook 生命周期
 
@@ -53,14 +53,13 @@ pytest
 |------|------|------|
 | SessionStart | `hooks/session/context.sh` | 记录会话开始状态 |
 | SessionStart/compact | `hooks/session/context.sh` | compact 后恢复关键上下文 |
-| PreToolUse | `hooks/security/guard-tool.sh` | 拦截危险命令和敏感文件写入 |
-| PostToolUse | `hooks/formatting/format-file.sh` | 自动格式化 + shellcheck |
+| PreToolUse | `hooks/tools/guard-tool.sh` | 拦截危险命令和敏感文件写入 |
+| PostToolUse | `hooks/tools/format-file.sh` | 自动格式化 + shellcheck |
 | PostToolUse/Bash | `hooks/logging/record-event.sh` | 记录所有 Bash 命令 |
 | Notification | `hooks/notifications/notify.sh` | 桌面/语音通知 |
 | SessionEnd | `hooks/session/summarize.sh` | 会话摘要推送 |
 | StopFailure | `hooks/logging/record-event.sh` | 记录异常停止 |
 | ConfigChange | `hooks/logging/record-event.sh` | 审计配置变更 |
-| CwdChanged/FileChanged | `hooks/environment/reload.sh` | 环境变量重载 |
 | SubagentStart | `hooks/logging/record-event.sh` | 记录 Agent 调用 |
 
 ## 代码规范
@@ -71,7 +70,7 @@ pytest
 
 ## 安全防护
 
-`hooks/security/guard-tool.sh` 会自动拦截：
+`hooks/tools/guard-tool.sh` 会自动拦截：
 - `rm -rf` 操作系统目录
 - 写入 `.env` 文件
 - `git push --force`

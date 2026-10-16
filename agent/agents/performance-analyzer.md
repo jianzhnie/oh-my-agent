@@ -1,5 +1,5 @@
 ---
-name: perf-analyzer
+name: performance-analyzer
 description: Performance analysis specialist. Use proactively when investigating throughput issues, memory bottlenecks, latency regressions, or slow operations. Identifies the hot path and recommends concrete optimizations.
 version: 1.0.0
 author: Robin

@@ -3,8 +3,8 @@
 set -euo pipefail
 
 HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-# shellcheck source=agent/hooks/shared/notifications.sh
-source "$HOOK_DIR/../shared/notifications.sh"
+# shellcheck source=agent/hooks/notifications/common.sh
+source "$HOOK_DIR/common.sh"
 
 INPUT=$(cat)
 NOTIFY_TYPE=$(jq -r '.notification_type // "task"' <<<"$INPUT")

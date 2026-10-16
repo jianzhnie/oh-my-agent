@@ -134,7 +134,7 @@ class RuntimeTests(unittest.TestCase):
         (self.project / "example.py").write_text("value = 1\n")
         self.mock("pre-commit", 'printf "%s\\n" "$PWD" "$@" > "$TEST_CAPTURE"')
         result = subprocess.run(
-            ["bash", str(AGENT / "hooks/formatting/format-file.sh")],
+            ["bash", str(AGENT / "hooks/tools/format-file.sh")],
             input=json.dumps(
                 {"tool_name": "Edit", "tool_input": {"file_path": "example.py"}}
             ),
@@ -189,7 +189,10 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual((state / ".session-cmd-start").read_text().strip(), "2")
         self.assertEqual((state / ".session-edits").read_text(), "")
         (state / ".session-edits").write_text("example.py|Edit\n")
-        expected = {name: (state / name).read_bytes() for name in [".session-start", ".session-cmd-start", ".session-edits"]}
+        expected = {
+            name: (state / name).read_bytes()
+            for name in [".session-start", ".session-cmd-start", ".session-edits"]
+        }
         restored = self.run_script("hooks/session/context.sh", {"source": "compact"})
         self.assertIn("Recent commits", restored.stdout)
         for name, content in expected.items():
@@ -199,25 +202,32 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual((state / name).read_bytes(), content)
 
     def test_config_and_failure_logs_remain_separate(self):
-        self.run_script("hooks/logging/record-event.sh", {
-            "hook_event_name": "ConfigChange", "source": "project_settings",
-            "file_path": "settings.json", "change_type": "modified",
-        })
-        self.run_script("hooks/logging/record-event.sh", {
-            "hook_event_name": "StopFailure", "error_type": "timeout",
-        })
+        self.run_script(
+            "hooks/logging/record-event.sh",
+            {
+                "hook_event_name": "ConfigChange",
+                "source": "project_settings",
+                "file_path": "settings.json",
+                "change_type": "modified",
+            },
+        )
+        self.run_script(
+            "hooks/logging/record-event.sh",
+            {
+                "hook_event_name": "StopFailure",
+                "error_type": "timeout",
+            },
+        )
         state = self.project / ".claude"
         audit = json.loads((state / "config-audit.log").read_text())
         self.assertEqual(audit["source"], "project_settings")
         self.assertEqual(audit["file"], "settings.json")
         self.assertEqual(audit["change_type"], "modified")
         self.assertIn("timestamp", audit)
-        self.assertTrue((state / "stop-failure.log").read_text().endswith("StopFailure: timeout\n"))
+        self.assertTrue(
+            (state / "stop-failure.log").read_text().endswith("StopFailure: timeout\n")
+        )
         self.assertFalse((state / "command-log.txt").exists())
-
-    def test_reload_without_environment_file_is_noop(self):
-        env = {k: v for k, v in self.env.items() if k != "CLAUDE_ENV_FILE"}
-        self.run_script("hooks/environment/reload.sh", env=env)
 
 
 if __name__ == "__main__":
